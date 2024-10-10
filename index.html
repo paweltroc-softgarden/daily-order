@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Daily Order Generator</title>
+	<style>
+        /* Basic styles */
+        body {
+            font-family: "Courier New", Courier, monospace;
+            background-color: #2c2c2c;
+            color: white;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        /* Header styles */
+        header {
+            background-color: black;
+            color: white;
+            text-align: center;
+            padding: 15px;
+            font-size: 24px;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
+        }
+
+        /* Main content styles */
+        main {
+            margin-top: 80px; /* To push content below the fixed header */
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* List of users with checkboxes */
+        .user-list-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px; /* Add spacing between list and button */
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        ul li {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        ul li input {
+            margin-right: 10px; /* Space between checkbox and label */
+        }
+
+        #result {
+			text-align: left;
+		}
+
+        /* Button styles */
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Footer styles */
+        footer {
+            background-color: black;
+            color: white;
+            text-align: center;
+            padding: 15px;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+            left: 0;
+        }
+	</style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+	Daily Order Generator
+</header>
+
+<!-- Body content -->
+<main>
+	<!-- Container for user list and button -->
+	<div class="user-list-container">
+		<ul id="user-list">
+			<!-- Dynamically populated list of users will appear here -->
+		</ul>
+		<button onclick="generateOrder()">Generate</button>
+	</div>
+
+	<!-- Result section -->
+	<div id="result" style="margin-top: 20px;"></div>
+</main>
+
+<!-- Footer -->
+<footer id="footer">
+	<!-- Content will be updated by JS -->
+</footer>
+
+<script>
+    // Fetch users from the JSON file and populate the list
+    async function loadUsers() {
+        try {
+            const response = await fetch('users.json');
+            const users = await response.json();
+            const userList = document.getElementById('user-list');
+
+            users.forEach((user, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `<input type="checkbox" id="user${index}" checked> <label for="user${index}">${user.name}</label>`;
+                userList.appendChild(li);
+            });
+        } catch (error) {
+            console.error('Error loading users:', error);
+        }
+    }
+
+    // Function to generate the randomized order
+    function generateOrder() {
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        let selectedUsers = [];
+
+        // Gather checked user names
+        checkboxes.forEach((checkbox) => {
+            if (checkbox.checked) {
+                selectedUsers.push(document.querySelector(`label[for="${checkbox.id}"]`).innerText);
+            }
+        });
+
+        if (selectedUsers.length === 0) {
+            document.getElementById("result").innerText = "No users selected.";
+            return;
+        }
+
+        // Randomize the selected users
+        selectedUsers.sort(() => Math.random() - 0.5);
+
+        // Get current date
+        const date = new Date();
+        const currentDate = date.toDateString();
+
+        // Generate result text
+        let resultText = `${currentDate} daily order:\n`;
+        selectedUsers.forEach((user, index) => {
+            resultText += `${index + 1}. ${user}\n`;
+        });
+
+        // Display result
+        document.getElementById("result").innerText = resultText;
+
+        // Copy the result to the clipboard
+        navigator.clipboard.writeText(resultText).then(() => {
+            // Display a modal/alert to confirm copy
+            alert("Order copied to clipboard!");
+        }).catch(err => {
+            console.error('Failed to copy text: ', err);
+        });
+    }
+
+    // Function to set the current year in the footer
+    function setFooterYear() {
+        const year = new Date().getFullYear();
+        document.getElementById("footer").innerHTML = `&copy; ${year} All rights reserved.`;
+    }
+
+    // Load users and set the footer year when the page loads
+    window.onload = function() {
+        loadUsers();
+        setFooterYear();
+    };
+</script>
+</body>
+</html>
